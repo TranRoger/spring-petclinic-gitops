@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'gcp-agent' }
+    agent any
 
     parameters {
         string(name: 'customersService', defaultValue: 'latest', description: 'Tag for customers-service')
@@ -59,10 +59,10 @@ pipeline {
                 }
             }
         }
+    }
 
-        post {
-            success { echo "✅ Deployed to namespace review-${env.BUILD_NUMBER}" }
-            failure { echo "❌ Deploy failed." }
-        }
+    post {
+        success { echo "✅ Deployed to namespace review-${env.BUILD_NUMBER}" }
+        failure { echo "❌ Deploy failed." }
     }
 }

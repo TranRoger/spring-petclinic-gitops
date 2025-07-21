@@ -1,0 +1,84 @@
+namespace: dev
+replicaCount: 1
+
+image:
+  repository: rodiroger
+  pullPolicy: IfNotPresent
+  defaultTag: latest # global default
+  # overrideTags:  # any service listed here wins
+  # customers-service: "abcdef123"    # <-- example override
+  # orders-service:    "4321fedc"
+
+configServerEnv: &configServerEnv
+  name: CONFIG_SERVER_URL
+  value: http://config-server:8888
+
+dependOnDiscovery: &dependOnDiscovery
+  name: discovery-server
+  port: 8761
+
+services:
+- name: config-server
+  imageName: spring-petclinic-config-server
+  port: 8888
+
+- name: discovery-server
+  imageName: spring-petclinic-discovery-server
+  port: 8761
+  env:
+  - *configServerEnv
+  dependOn:
+    name: config-server
+    port: 8888
+
+- name: customers-service
+  imageName: spring-petclinic-customers-service
+  port: 8081
+  env:
+  - *configServerEnv
+  dependOn: *dependOnDiscovery
+
+- name: visits-service
+  imageName: spring-petclinic-visits-service
+  port: 8082
+  env:
+  - *configServerEnv
+  dependOn: *dependOnDiscovery
+
+- name: vets-service
+  imageName: spring-petclinic-vets-service
+  port: 8083
+  env:
+  - *configServerEnv
+  dependOn: *dependOnDiscovery
+
+- name: api-gateway
+  imageName: spring-petclinic-api-gateway
+  port: 8080
+  env:
+  - *configServerEnv
+  dependOn: *dependOnDiscovery
+
+- name: admin-server
+  imageName: spring-petclinic-admin-server
+  port: 9090
+  env:
+  - *configServerEnv
+  dependOn: *dependOnDiscovery
+
+ingress:
+  enabled: true
+  className: nginx
+  rules:
+  - host: api.roger.works
+    service: api-gateway
+    servicePort: 8080
+    path: /
+  - host: admin.roger.works
+    service: admin-server
+    servicePort: 9090
+    path: /
+  - host: discovery.roger.works
+    service: discovery-server
+    servicePort: 8761
+    path: /

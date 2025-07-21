@@ -1,0 +1,106 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: petclinic-ingress
+  namespace: dev
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: config.roger.works
+    http:
+    - paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: config-server
+            port:
+              number: 8888
+
+  - host: discovery.roger.works
+    http:
+    - paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: discovery-server
+            port:
+              number: 8761
+
+  - host: customers.roger.works
+    http:
+    - paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: customers-service
+            port:
+              number: 8081
+
+  - host: visits.roger.works
+    http:
+    - paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: visits-service
+            port:
+              number: 8082
+
+  - host: vets.roger.works
+    http:
+    - paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: vets-service
+            port:
+              number: 8083
+
+  - host: genai.roger.works
+    http:
+    - paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: genai-service
+            port:
+              number: 8084
+
+  - host: api.roger.works
+    http:
+    - paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway
+            port:
+              number: 8080
+
+  - host: tracing.roger.works
+    http:
+    - paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tracing-service
+            port:
+              number: 9411
+
+  - host: admin.roger.works
+    http:
+    - paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: admin-server
+            port:
+              number: 9090

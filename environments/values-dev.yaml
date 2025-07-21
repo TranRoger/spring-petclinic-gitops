@@ -1,0 +1,24 @@
+# deploy into the "dev" namespace
+namespace: dev
+
+# maybe fewer replicas in dev
+replicaCount: 1
+
+# dev-specific ingress hostnames
+ingress:
+  enabled: true
+  className: nginx
+  rules:
+  - host: api.roger.works
+    service: api-gateway
+    servicePort: 8080
+    path: /
+  - host: admin.roger.works
+    service: admin-server
+    servicePort: 9090
+    path: /
+
+# if you ever want to pin a service to a non-latest tag in dev,
+# you can set it here (but generally keep overrideTags empty in dev)
+image:
+  overrideTags: {}

@@ -1,0 +1,362 @@
+# 1) CONFIG SERVER
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-server
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: config-server
+  template:
+    metadata:
+      labels:
+        app: config-server
+    spec:
+      containers:
+      - name: config-server
+        image: rodiroger/spring-petclinic-config-server
+        ports:
+        - containerPort: 8888
+        resources:
+          limits:
+            memory: "512Mi"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8888
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: config-server
+  namespace: dev
+spec:
+  selector:
+    app: config-server
+  ports:
+  - port: 8888
+    targetPort: 8888
+---
+# 2) DISCOVERY SERVER
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery-server
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discovery-server
+  template:
+    metadata:
+      labels:
+        app: discovery-server
+    spec:
+      containers:
+      - name: discovery-server
+        image: rodiroger/spring-petclinic-discovery-server
+        ports:
+        - containerPort: 8761
+        resources:
+          limits:
+            memory: "512Mi"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8761
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-server
+  namespace: dev
+spec:
+  selector:
+    app: discovery-server
+  ports:
+  - port: 8761
+    targetPort: 8761
+---
+# 3) CUSTOMERS SERVICE
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customers-service
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customers-service
+  template:
+    metadata:
+      labels:
+        app: customers-service
+    spec:
+      containers:
+      - name: customers-service
+        image: rodiroger/spring-petclinic-customers-service
+        ports:
+        - containerPort: 8081
+        resources:
+          limits:
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customers-service
+  namespace: dev
+spec:
+  selector:
+    app: customers-service
+  ports:
+  - port: 8081
+    targetPort: 8081
+---
+# 4) VISITS SERVICE
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: visits-service
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: visits-service
+  template:
+    metadata:
+      labels:
+        app: visits-service
+    spec:
+      containers:
+      - name: visits-service
+        image: rodiroger/spring-petclinic-visits-service
+        ports:
+        - containerPort: 8082
+        resources:
+          limits:
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: visits-service
+  namespace: dev
+spec:
+  selector:
+    app: visits-service
+  ports:
+  - port: 8082
+    targetPort: 8082
+---
+# 5) VETS SERVICE
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vets-service
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vets-service
+  template:
+    metadata:
+      labels:
+        app: vets-service
+    spec:
+      containers:
+      - name: vets-service
+        image: rodiroger/spring-petclinic-vets-service
+        ports:
+        - containerPort: 8083
+        resources:
+          limits:
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vets-service
+  namespace: dev
+spec:
+  selector:
+    app: vets-service
+  ports:
+  - port: 8083
+    targetPort: 8083
+---
+# 6) GENAI SERVICE
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: genai-service
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: genai-service
+  template:
+    metadata:
+      labels:
+        app: genai-service
+    spec:
+      containers:
+      - name: genai-service
+        image: rodiroger/spring-petclinic-genai-service
+        ports:
+        - containerPort: 8084
+        resources:
+          limits:
+            memory: "512Mi"
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: genai-credentials
+              key: OPENAI_API_KEY
+        - name: AZURE_OPENAI_KEY
+          valueFrom:
+            secretKeyRef:
+              name: genai-credentials
+              key: AZURE_OPENAI_KEY
+        - name: AZURE_OPENAI_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: genai-credentials
+              key: AZURE_OPENAI_ENDPOINT
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: genai-service
+  namespace: dev
+spec:
+  selector:
+    app: genai-service
+  ports:
+  - port: 8084
+    targetPort: 8084
+---
+# 7) AIP GATEWAY
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+      - name: api-gateway
+        image: rodiroger/spring-petclinic-api-gateway
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: dev
+spec:
+  selector:
+    app: api-gateway
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+# 8) TRACING SERVER (Zipkin)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zipkin-server
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zipkin-server
+  template:
+    metadata:
+      labels:
+        app: zipkin-server
+    spec:
+      containers:
+      - name: zipkin-server
+        image: openzipkin/zipkin
+        ports:
+        - containerPort: 9411
+        resources:
+          limits:
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipkin-server
+  namespace: dev
+spec:
+  selector:
+    app: zipkin-server
+  ports:
+  - port: 9411
+    targetPort: 9411
+---
+# 9) ADMIN SERVER
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-server
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-server
+  template:
+    metadata:
+      labels:
+        app: admin-server
+    spec:
+      containers:
+      - name: admin-server
+        image: rodiroger/spring-petclinic-admin-server
+        ports:
+        - containerPort: 9090
+        resources:
+          limits:
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-server
+  namespace: dev
+spec:
+  selector:
+    app: admin-server
+  ports:
+  - port: 9090
+    targetPort: 9090

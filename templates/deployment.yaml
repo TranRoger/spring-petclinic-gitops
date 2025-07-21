@@ -1,0 +1,44 @@
+{{- range #svc := .Values.services -}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $svc.name }}
+  namespace: {{ $.Values.namespace | quote }}
+  labels:
+    app: {{ $svc.name | quote }}
+spec:
+    replicas: {{ $.Values.replicaCount }}
+    selector:
+      matchLabels:
+        app: {{ $svc.name | quote }}
+    template:
+      metadata:
+        labels:
+          app: {{ $svc.name | quote }}
+      spec:
+        {{- if $svc.dependOn }}
+        initContainers:
+          - name: init-container-for-{{ $svc.name }}
+            image: curlimages/curl:latest
+            command:
+              - sh
+              - -c
+              - >
+                until curl -I http://{{ $svc.dependOn.name }}:{{ $svc.dependOn.port }};
+                do echo "waiting for {{ $svc.dependOn.name }}..."; sleep 5;
+                done
+        {{- end }}
+        containers:
+          - name: {{ $svc.name | quote }}
+            image: "{{ $.Values.image.repository }}/{{ $svc.imageName }}:{{ default $.Values.image.defaultTag (index $.Values.image.overrideTags $svc.name) }}"
+            imagePullPolicy: {{ $.Values.image.pullPolicy }}
+            ports:
+              - containerPort: {{ $svc.port }}
+            {{- if $svc.env }}
+            env:
+              {{- toYaml $svc.env | nindent 12 }}
+              - name: EUREKA_INSTANCE_HOSTNAME
+                value: {{ $svc.name }}
+            {{- end }}
+{{ - end }}
